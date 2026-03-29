@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ tournament.name }}{% endblock %}
+{% block content %}
+
+<h1>{{ tournament.name }}</h1>
+
+<p><strong>Application deadline:</strong> {{ tournament.application_deadline }}</p>
+<p><strong>Max teams:</strong> {{ tournament.max_teams }}</p>
+
+<div class="form-actions">
+{% if user.is_authenticated and user.is_staff %}
+    <form method="post" action="{% url 'tournaments:generate_bracket' tournament.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn">Generate Matches</button>
+    </form>
+{% endif %}
+
+{% if user.is_authenticated %}
+    <a href="{% url 'teams:register_team' tournament.id %}" class="btn primary">
+        Register a Team
+    </a>
+{% else %}
+    <p>Team registration is closed.</p>
+{% endif %}
+</div>
+<hr>
+
+<h2>Teams</h2>
+<ul class="list">
+    {% for team in teams %}
+        <li>{{ team.name }}</li>
+    {% empty %}
+        <li>No teams yet</li>
+    {% endfor %}
+</ul>
+
+<h2>Matches</h2>
+<ul class="list">
+    {% for match in matches %}
+        <li>{{ match.team1 }} vs {{ match.team2 }}</li>
+    {% empty %}
+        <li>No matches generated</li>
+    {% endfor %}
+</ul>
+
+{% endblock %}

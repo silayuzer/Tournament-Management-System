@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Login{% endblock %}
+{% block content %}
+
+<div class="form-card">
+    <h1>Login</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+            <button type="submit" class="btn primary btn-full">Login</button>
+
+            <p>
+               <a href="{% url 'password_reset' %}">
+                   Forgot password?
+               </a>
+            </p> 
+    </form>
+</div>
+
+{% endblock %}

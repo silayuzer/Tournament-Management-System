@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<h1>Register</h1>
+
+{% if form.errors %}
+  <div style="color: red;">
+    {{ form.errors }}
+  </div>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+
+    {% for field in form %}
+        <div>
+            {{ field.label_tag }}
+            {{ field }}
+            {{ field.errors }}
+        </div>
+    {% endfor %}
+
+    <button type="submit">Register</button>
+</form>
+{% endblock %}

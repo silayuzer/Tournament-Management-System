@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+{% if user.is_authenticated and user.role == "organizer" %}
+    <a href="{% url 'tournaments:create_tournament' %}" class="btn primary">
+        Create Tournament
+    </a>
+{% endif %}
+
+
+<h1>Upcoming Tournaments</h1>
+
+<ul>
+  {% for tournament in page_obj %}
+    <li>
+      <strong>{{ tournament.name }}</strong><br>
+      {{tournament.get_discipline_display}}<br>
+      {{ tournament.start_datetime}}<br>
+      Organizer: {{ tournament.organizer.email }}
+    </li>
+  {% empty %}
+    <li>No upcoming tournaments available.</li>
+  {% endfor %}
+</ul>
+
+<div>
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+    {% endif %}
+
+    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">Next</a>
+    {% endif %}
+</div>
+{% endblock %}

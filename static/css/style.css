@@ -1,0 +1,165 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    margin: 0;
+}
+
+nav {
+    background: #1e293b;
+    color: white;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+nav a {
+    color: white;
+    margin-left: 15px;
+    text-decoration: none;
+}
+
+.container {
+    max-width: 600px;
+    margin: 40px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+input {
+    padding: 10px;
+    margin-top: 10px;
+}
+
+button {
+    margin-top: 0; /* 🔥 prevents vertical shift */
+}
+
+
+button {
+    display: inline-block;
+    background-color:  #2563eb;
+    color: white;
+    border-radius: 10px; 
+    font-weight: 300;
+    text-decoration: none;
+    padding: 12px 22px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease; 
+}
+
+button:hover {
+    background-color: #1e40af;
+}
+
+.message {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.success {
+    background: #dcfce7;
+}
+
+.error {
+    background: #fee2e2;
+}
+
+.message.error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.errorlist {
+    color: #991b1b;
+    margin-bottom: 10px;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 12px 22px;
+    background-color: #2563eb;
+    color: white;
+    border-radius: 10px; 
+    font-weight: 300;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn:hover {
+    background-color: #1e40af;
+    transform: translateY(-1px);
+}
+
+.btn.primary {
+    background-color: #2563eb;
+}
+
+.btn.primary:hover {
+    background-color: #0056b3;
+}
+
+.btn.admin {
+    background-color: #dc3545;
+}
+
+.btn.admin:hover {
+    background-color: #991b1b;
+}
+
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch; 
+    gap: 12px;
+}
+
+.form-actions form {
+    margin: 0;
+} 
+
+
+.form-actions .btn,
+.form-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;         
+    min-width: 180px;
+    padding: 0 22px;
+    line-height: 1;
+    box-sizing: border-box;
+}
+
+
+
+.btn.secondary {
+    background-color: #6b7280;
+}
+
+.btn.secondary:hover {
+    background-color: #4b5563;
+}

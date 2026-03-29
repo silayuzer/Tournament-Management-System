@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<h1>Register Team for {{ tournament.name }}</h1>
+
+<form method="post">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+        <div class="message error">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+    {{ form.as_p }}
+
+
+    <div class="form-actions">
+        <button type="submit" class="btn admin">
+            Register Team
+        </button>
+
+        <a href="{% url 'tournaments:tournament_detail' tournament.id %}" class="btn secondary">
+            ← Back to Tournament
+        </a>
+    </div>
+</form>
+
+{% endblock %}

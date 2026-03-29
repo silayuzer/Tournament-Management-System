@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Upcoming Tournaments{% endblock %}
+{% block content %}
+
+<h1>Upcoming Tournaments</h1>
+
+<form method="get" class="search-form">
+    <input type="text" name="q" placeholder="Search tournaments..." value="{{ query }}">
+    <button type="submit">Search</button>
+</form>
+
+
+<div class="tournament-list">
+    {% for tournament in page_obj %}
+    <div class="tournament-card">
+        <h2>{{ tournament.name }}</h2>
+        <p>Discipline: {{ tournament.discipline }}</p>
+        <p>Starts: {{ tournament.start_time }}</p>
+
+        <a href="{% url 'tournaments:tournament_detail' tournament.id %}" class="btn primary">
+            View Details
+        </a>
+    </div>
+{% empty %}
+    <p>No tournaments available.</p>
+{% endfor %}
+</div>
+
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?q={{ query }}&page={{ page_obj.previous_page_number }}" class="btn">Previous</a>
+    {% endif %}
+    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+        <a href="?q={{ query }}&page={{ page_obj.next_page_number }}" class="btn">Next</a>
+    {% endif %}
+</div>
+
+{% endblock %}
