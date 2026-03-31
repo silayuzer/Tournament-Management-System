@@ -4,6 +4,10 @@ from django.utils import timezone
 
 # Create your models here.
 User=settings.AUTH_USER_MODEL
+
+TEAM_SPORTS = ["SCOCCER"]
+INDIVIDUAL_SPORTS = ["CHESS", "TENNIS"]
+
 class Tournament(models.Model):
     DISCIPLINE_CHOICES = [
         ("CHESS", "Chess"),
@@ -17,11 +21,18 @@ class Tournament(models.Model):
     description=models.TextField(blank=True)
     start_time=models.DateTimeField()
     location=models.CharField(max_length=200)
-    max_participants=models.PositiveIntegerField()
-    max_teams=models.PositiveIntegerField(default=10)
+    max_participants=models.PositiveIntegerField(null=True, blank=True)
+    max_teams=models.PositiveIntegerField(null=True, blank=True)
     application_deadline=models.DateTimeField()
     created_at=models.DateTimeField(auto_now_add=True)
     is_active=models.BooleanField(default=True)
+
+    @property
+    def is_team_based(self):
+        return self.discipline in TEAM_SPORTS
+
+    def __str__(self):
+        return self.name
 
     def clean(self):
         if self.start_time<timezone.now():
@@ -29,15 +40,32 @@ class Tournament(models.Model):
         if self.application_deadline>=self.start_time:
            raise ValueError("Application deadline must be before the start time.")    
         
-    def __str__(self):
-        return self.name
     
 class Match(models.Model):
     tournament=models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name="matches")
     team1=models.ForeignKey("teams.Team", on_delete=models.CASCADE, related_name="match_team1")
     team2=models.ForeignKey("teams.Team", on_delete=models.CASCADE, related_name="match_team2")
+    winner_team=models.ForeignKey("teams.Team", null=True, blank=True, on_delete=models.SET_NULL, related_name="wins")
+    
+    participant1=models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="match_participant1", null=True, blank=True)
+    participant2=models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="match_participant2", null=True, blank=True)
+    winner_participant=models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="participant_wins")
+
     created_at=models.DateTimeField(auto_now_add=True)
-    winner=models.ForeignKey("teams.Team", null=True, blank=True, on_delete=models.SET_NULL, related_name="wins")
 
     def __str__(self):
-        return f"{self.team1} vs {self.team2}"
+        if self.tournament.is_team_based:
+            return f"{self.team1} vs {self.team2}"
+        return f"{self.participant1} vs {self.participant2}"
+    
+class Participant(models.Model):
+    tournament=models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name="participants")
+    user=models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="participations")
+    registered_at=models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("tournament", "user")
+
+    def __str__(self):
+        return f"{self.user} in {self.tournament}"
+    

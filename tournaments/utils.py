@@ -1,23 +1,35 @@
 import random
 from .models import Match
-from teams.models import Team
 
 def generate_bracket(tournament):
-    teams = list(Team.objects.filter(tournament=tournament))
-    random.shuffle(teams)
+    if tournament.is_team_based:
+        from teams.models import Team
+        contestants = list(Team.objects.filter(tournament=tournament))
+    else:
+        from .models import Participant
+        contestants = list(tournament.participants.all())
+    
+    if len(contestants) < 2:
+        raise ValueError("Not enough contestants to generate a bracket")
+    
+    if len(contestants) % 2 != 0:
+        raise ValueError("Number of contestants must be even")
 
-    if len(teams) < 2:
-        raise ValueError("Not enough teams to generate a bracket")
-    if len(teams) % 2 != 0:
-        raise ValueError("Number of teams must be even")
-    
     if Match.objects.filter(tournament=tournament).exists():
-        raise ValueError("Matches have already been generated for this tournament")
+        raise ValueError("Matches have already been generated")
     
-    random.shuffle(teams)
-    for i in range(0, len(teams), 2):
-        Match.objects.create(
-            tournament=tournament,
-            team1=teams[i],
-            team2=teams[i+1] 
-        )
+
+    random.shuffle(contestants)
+    for i in range(0, len(contestants), 2):
+        if tournament.is_team_based:
+            Match.objects.create(
+                tournament=tournament,
+                team1=contestants[i],
+                team2=contestants[i+1]
+            )
+        else:
+            Match.objects.create(
+                tournament=tournament,
+                participant1=contestants[i].user,
+                participant2=contestants[i+1].user
+            )

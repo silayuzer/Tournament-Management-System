@@ -3,45 +3,104 @@
 {% block title %}{{ tournament.name }}{% endblock %}
 {% block content %}
 
-<h1>{{ tournament.name }}</h1>
+<div class="container mt-4">
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
 
-<p><strong>Application deadline:</strong> {{ tournament.application_deadline }}</p>
-<p><strong>Max teams:</strong> {{ tournament.max_teams }}</p>
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">{{ tournament.name }}</h3>
+        </div>
+        <div class="card-body">
+            <p><strong>Discipline:</strong> {{ tournament.get_discipline_display }}</p>
+            <p><strong>Location:</strong> {{ tournament.location }}</p>
+            <p><strong>Start Time:</strong> {{ tournament.start_time }}</p>
+            <p><strong>Application Deadline:</strong> {{ tournament.application_deadline }}</p>
+            {% if tournament.is_team_based %}
+                <p><strong>Max Teams:</strong> {{ tournament.max_teams }}</p>
+            {% else %}
+                <p><strong>Max Participants:</strong> {{ tournament.max_participants }}</p>
+            {% endif %}
+            {% if tournament.description %}
+                <p><strong>Description:</strong> {{ tournament.description }}</p>
+            {% endif %}
+        </div>
+    </div>
 
-<div class="form-actions">
-{% if user.is_authenticated and user.is_staff %}
-    <form method="post" action="{% url 'tournaments:generate_bracket' tournament.id %}">
-        {% csrf_token %}
-        <button type="submit" class="btn">Generate Matches</button>
-    </form>
-{% endif %}
+    <div class="d-flex gap-2 mb-4">
+        {% if user.is_authenticated and user.is_staff %}
+            <form method="post" action="{% url 'tournaments:generate_bracket' tournament.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-warning">Generate Matches</button>
+            </form>
+        {% endif %}
 
-{% if user.is_authenticated %}
-    <a href="{% url 'teams:register_team' tournament.id %}" class="btn primary">
-        Register a Team
-    </a>
-{% else %}
-    <p>Team registration is closed.</p>
-{% endif %}
+        {% if user.is_authenticated %}
+            {% if tournament.is_team_based %}
+                <a href="{% url 'teams:register_team' tournament.id %}" class="btn btn-primary">Join Tournament</a>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    {% if tournament.is_team_based %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header"><h5 class="mb-0">Teams</h5></div>
+        <ul class="list-group list-group-flush">
+            {% for team in teams %}
+                <li class="list-group-item">{{ team.name }}</li>
+            {% empty %}
+                <li class="list-group-item text-muted">No teams yet</li>
+            {% endfor %}
+        </ul>
+    </div>
+    
+    {% else %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header"><h5 class="mb-0">Participants</h5></div>
+        <ul class="list-group list-group-flush">
+            {% for p in participants %}
+                <li class="list-group-item">{{ p.get_full_name|default:p.email }}</li>
+            {% empty %}
+                <li class="list-group-item text-muted">No participants yet</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="card shadow-sm">
+        <div class="card-header"><h5 class="mb-0">Matches</h5></div>
+        <ul class="list-group list-group-flush">
+            {% for match in matches %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {% if tournament.is_team_based %}
+                        {{ match.team1.name }} vs {{ match.team2.name }}
+                        {% if match.winner_team %}
+                          <span class="badge bg-success">Winner: {{ match.winner_team.name }}</span>
+                        {% else %}
+                          <span class="badge bg-secondary">No result yet</span>
+                        {% endif %}
+                    {% else %}
+                        {{ match.participant1.get_full_name|default:match.participant1.email }} vs
+                        {{ match.participant2.get_full_name|default:match.participant2.email }}
+                        {% if match.winner_participant %}
+                          <span class="badge bg-success">Winner: {{ match.winner_participant.get_full_name|default:match.winner_participant.email }}</span>
+                        {% else %}
+                          <span class="badge bg-secondary">No result yet</span>
+                        {% endif %}
+                    {% endif %}
+                </li>
+            {% empty %}
+               <li class="list-group-item text-muted">No matches scheduled yet</li>
+            {% endfor %}
+        </ul>
+    </div> 
+
 </div>
-<hr>
-
-<h2>Teams</h2>
-<ul class="list">
-    {% for team in teams %}
-        <li>{{ team.name }}</li>
-    {% empty %}
-        <li>No teams yet</li>
-    {% endfor %}
-</ul>
-
-<h2>Matches</h2>
-<ul class="list">
-    {% for match in matches %}
-        <li>{{ match.team1 }} vs {{ match.team2 }}</li>
-    {% empty %}
-        <li>No matches generated</li>
-    {% endfor %}
-</ul>
-
 {% endblock %}

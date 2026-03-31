@@ -1,9 +1,94 @@
 {% extends 'base.html' %}
+{% block title %}Create Tournament{% endblock %}
 {% load static %}
 {% block content %}
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Create</button>
-</form>
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Create Tournament</h4>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Discipline</label>
+                    <select name="discipline" id="id_discipline" class="form-select" required>
+                        <option value="">--------</option>
+                        <option value="SOCCER">Soccer</option>
+                        <option value="CHESS">Chess</option>
+                        <option value="TENNIS">Tennis</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" rows="3"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Start Time</label>
+                    <input type="datetime-local" name="start_time" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Application Deadline</label>
+                    <input type="datetime-local" name="application_deadline" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Location</label>
+                    <input type="text" name="location" class="form-control" required>
+                </div>
+
+                <div class="mb-3" id="field_max_teams" style="display:none;">
+                    <label class="form-label">Max Teams</label>
+                    <input type="number" name="max_teams" class="form-control" min="2">
+                </div>
+
+                <div class="mb-3" id="field_max_participants" style="display:none;">
+                    <label class="form-label">Max Participants</label>
+                    <input type="number" name="max_participants" class="form-control" min="2">
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" name="is_active" class="form-check-input" id="id_is_active" checked>
+                    <label class="form-check-label" for="id_is_active">Is Active</label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Create Tournament</button>
+                <a href="/" class="btn btn-secondary ms-2">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>    
+
+<script>
+    const discipline = document.getElementById('id_discipline');
+    const teamField = document.getElementById('field_max_teams');
+    const participantField = document.getElementById('field_max_participants');
+
+    function updateFields() {
+        const val = discipline.value;
+        if (val === 'SOCCER') {
+            teamField.style.display = 'block';
+            participantField.style.display = 'none';
+        } else if (val === 'CHESS' || val === 'TENNIS') {
+            teamField.style.display = 'none';
+            participantField.style.display = 'block';
+        } else {
+            teamField.style.display = 'none';
+            participantField.style.display = 'none';
+        }
+    }
+
+    discipline.addEventListener('change', updateFields);
+    updateFields();
+</script>
 {% endblock %}
