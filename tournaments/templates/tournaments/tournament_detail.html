@@ -4,15 +4,6 @@
 {% block content %}
 
 <div class="container mt-4">
-    
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
 
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-primary text-white">
@@ -66,7 +57,7 @@
         <div class="card-header"><h5 class="mb-0">Participants</h5></div>
         <ul class="list-group list-group-flush">
             {% for p in participants %}
-                <li class="list-group-item">{{ p.get_full_name|default:p.email }}</li>
+                <li class="list-group-item">{{ p.user.get_full_name|default:p.user.email }}</li>
             {% empty %}
                 <li class="list-group-item text-muted">No participants yet</li>
             {% endfor %}
@@ -80,13 +71,16 @@
             {% for match in matches %}
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     {% if tournament.is_team_based %}
+                      {% if match.team1 and match.team2 %}
                         {{ match.team1.name }} vs {{ match.team2.name }}
                         {% if match.winner_team %}
                           <span class="badge bg-success">Winner: {{ match.winner_team.name }}</span>
                         {% else %}
                           <span class="badge bg-secondary">No result yet</span>
                         {% endif %}
+                      {% endif %}
                     {% else %}
+                      {% if match.participant1 and match.participant2 %}
                         {{ match.participant1.get_full_name|default:match.participant1.email }} vs
                         {{ match.participant2.get_full_name|default:match.participant2.email }}
                         {% if match.winner_participant %}
@@ -94,6 +88,7 @@
                         {% else %}
                           <span class="badge bg-secondary">No result yet</span>
                         {% endif %}
+                      {% endif %}
                     {% endif %}
                 </li>
             {% empty %}

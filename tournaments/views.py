@@ -3,7 +3,8 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
-from .models import Tournament, Match, Participant
+from .models import Tournament, Match
+from participants.models import Participant
 from teams.models import Team
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
@@ -59,12 +60,6 @@ def tournament_detail(request, tournament_id):
     participants=tournament.participants.all() if not tournament.is_team_based else None
     matches=Match.objects.filter(tournament=tournament)
 
-    can_register=(
-        request.user.is_authenticated and
-        timezone.now() < tournament.application_deadline and
-        teams.count() < tournament.max_teams
-    )
-
     return render(request, "tournaments/tournament_detail.html", {
         "tournament": tournament, 
         "teams": teams, 
@@ -84,7 +79,7 @@ def register_participant(request, tournament_id):
         messages.error(request, "The application deadline for this tournament has passed.")
         return redirect("tournaments:tournament_detail", tournament_id)
     
-    if tournament.participants.count() >= tournament.max_participants:
+    if tournament.max_participants and tournament.participants.count() >= tournament.max_participants:
         messages.error(request, "This tournament is full.")
         return redirect("tournaments:tournament_detail", tournament_id)
     
@@ -98,26 +93,39 @@ def register_participant(request, tournament_id):
 
 @staff_member_required
 def generate_bracket_view(request, tournament_id):
-
     tournament=get_object_or_404(Tournament, id=tournament_id)
+
+    if tournament.is_team_based:
+        contestants = list(tournament.teams.all())
+        contestant_type = "teams"
+    else:
+        contestants = list(tournament.participants.all())
+        contestant_type = "participants"
+
+    count = len(contestants)
+
+    if count == 0:
+        messages.error(request, "No contestants registered yet.Cannot generate matches.")
+        return redirect("tournaments:tournament_detail", tournament_id=tournament.id)
+
+    if count < 2:
+        messages.error(request, f"At least 2 {contestant_type} are required. Currently: {count}.")
+        return redirect("tournaments:tournament_detail", tournament_id=tournament.id)
     
     if tournament.matches.exists():
         messages.error(request, "Matches have already been generated for this tournament.")
         return redirect("tournaments:tournament_detail", tournament_id=tournament.id)
     
-    teams= list(Team.objects.filter(tournament=tournament))
+    from itertools import combinations
+    pairs = list(combinations(contestants, 2))
+    
+    for a, b in pairs:
+        if tournament.is_team_based:
+            Match.objects.create(tournament=tournament, team1=a, team2=b)
+        else:
+            Match.objects.create(tournament=tournament, participant1=a.user, participant2=b.user)
 
-    if len(teams) < 2:
-        messages.error(request, "Not enough teams to generate a bracket.")
-        return redirect("tournaments:tournament_detail", tournament_id=tournament.id)
     
-    random.shuffle(teams)
-    
-    for i in range(0, len(teams)-1, 2):
-        Match.objects.create(
-            tournament=tournament,
-            team1=teams[i],
-            team2=teams[i+1]
-        )
-    messages.success(request, "Bracket generated successfully.")
+    total=len(pairs)
+    messages.success(request, f"Bracket generated successfully! {total} matches created.")
     return redirect("tournaments:tournament_detail", tournament_id=tournament.id)

@@ -1,5 +1,7 @@
 import random
 from .models import Match
+from teams.models import Team
+from participants.models import Participant
 
 def generate_bracket(tournament):
     if tournament.is_team_based:

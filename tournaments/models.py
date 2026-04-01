@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 # Create your models here.
 User=settings.AUTH_USER_MODEL
@@ -35,16 +36,16 @@ class Tournament(models.Model):
         return self.name
 
     def clean(self):
-        if self.start_time<timezone.now():
-           raise ValueError("Tournament start time must be in the future.") 
-        if self.application_deadline>=self.start_time:
-           raise ValueError("Application deadline must be before the start time.")    
+        if self.start_time and self.start_time<timezone.now():
+           raise ValidationError("Tournament start time must be in the future.") 
+        if self.start_time and self.application_deadline and self.application_deadline>=self.start_time:
+           raise ValidationError("Application deadline must be before the start time.")    
         
     
 class Match(models.Model):
     tournament=models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name="matches")
-    team1=models.ForeignKey("teams.Team", on_delete=models.CASCADE, related_name="match_team1")
-    team2=models.ForeignKey("teams.Team", on_delete=models.CASCADE, related_name="match_team2")
+    team1=models.ForeignKey("teams.Team", on_delete=models.CASCADE, related_name="match_team1", null=True, blank=True)
+    team2=models.ForeignKey("teams.Team", on_delete=models.CASCADE, related_name="match_team2", null=True, blank=True)
     winner_team=models.ForeignKey("teams.Team", null=True, blank=True, on_delete=models.SET_NULL, related_name="wins")
     
     participant1=models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="match_participant1", null=True, blank=True)
@@ -58,14 +59,5 @@ class Match(models.Model):
             return f"{self.team1} vs {self.team2}"
         return f"{self.participant1} vs {self.participant2}"
     
-class Participant(models.Model):
-    tournament=models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name="participants")
-    user=models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="participations")
-    registered_at=models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        unique_together = ("tournament", "user")
-
-    def __str__(self):
-        return f"{self.user} in {self.tournament}"
     

@@ -43,7 +43,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         REQUIERED_FIELDS=["username"]
 
         def __str__(self):
-            return self.email
+            full_name = f"{self.first_name} {self.last_name}".strip()
+            return full_name if full_name else self.email
         
 import uuid
 from django.utils.timezone import now
