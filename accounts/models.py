@@ -40,11 +40,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         objects=UserManager()
 
         USERNAME_FIELD="email"
-        REQUIERED_FIELDS=["username"]
+        REQUIERED_FIELDS=[]
 
-        def __str__(self):
+        def get_full_name(self):
             full_name = f"{self.first_name} {self.last_name}".strip()
             return full_name if full_name else self.email
+
+        def __str__(self):
+            return self.get_full_name()
         
 import uuid
 from django.utils.timezone import now

@@ -3,99 +3,124 @@
 {% block title %}{{ tournament.name }}{% endblock %}
 {% block content %}
 
-<div class="container mt-4">
+<div class="container ">
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white">
-            <h3 class="mb-0">{{ tournament.name }}</h3>
+    <div class="card" style="margin-bottom: 1.5rem">
+        <div class="card-header gradient">
+            <div >
+                <h2 style="font-size: 1.75rem; font-weight: 800; margin-bottom: 0.2rem;"> {{ tournament.name }}</h2>
+                <span class="discipline-badge">{{ tournament.get_discipline_display }}</span>
+            </div>
         </div>
         <div class="card-body">
-            <p><strong>Discipline:</strong> {{ tournament.get_discipline_display }}</p>
-            <p><strong>Location:</strong> {{ tournament.location }}</p>
-            <p><strong>Start Time:</strong> {{ tournament.start_time }}</p>
-            <p><strong>Application Deadline:</strong> {{ tournament.application_deadline }}</p>
-            {% if tournament.is_team_based %}
-                <p><strong>Max Teams:</strong> {{ tournament.max_teams }}</p>
-            {% else %}
-                <p><strong>Max Participants:</strong> {{ tournament.max_participants }}</p>
-            {% endif %}
-            {% if tournament.description %}
-                <p><strong>Description:</strong> {{ tournament.description }}</p>
+            <div class="stat-row">
+                <div class="stat-card">
+                    <div class="stat-value">{{ teams.count|default:participants.count}}</div>
+                    <div class="stat-label">{{ tournament.is_team_based|yesno:"Teams,Participants" }} Registered</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value"> {{ matches.count }}</div>
+                    <div class="stat-label">Matches</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ tournament.max_teams|default:tournament.max_participants }}</div>
+                    <div class="stat-label">Max {{ tournament.is_team_based|yesno:"Teams,Participants" }}</div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; font-size:0.9rem; color:#64748b;">
+                <div>📍 <strong>{{ tournament.location }}</strong></div>
+                <div>🕐 <strong>{{ tournament.start_time|date:"M d, Y · H:i" }}</strong></div>
+                <div>⏳ Deadline: <strong>{{ tournament.application_deadline|date:"M d, Y" }}</strong></div>
+                <div>🏅 Organizer: <strong>{{ tournament.organizer.get_full_name|default:tournament.organizer.email }}</strong></div>
+            </div>
+
+            {%if tournament.description %}
+                <div class="divider"></div>
+                <p style="color:#475569;">{{ tournament.description }}</p>
             {% endif %}
         </div>
     </div>
 
-    <div class="d-flex gap-2 mb-4">
+    <div style="display:flex; gap:0.75rem; margin-bottom:1.5rem; flex-wrap:wrap;">
         {% if user.is_authenticated and user.is_staff %}
             <form method="post" action="{% url 'tournaments:generate_bracket' tournament.id %}">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-warning">Generate Matches</button>
+                <button type="submit" class="btn btn-warning">⚡Generate Matches</button>
             </form>
         {% endif %}
 
         {% if user.is_authenticated %}
             {% if tournament.is_team_based %}
-                <a href="{% url 'teams:register_team' tournament.id %}" class="btn btn-primary">Join Tournament</a>
+                <a href="{% url 'teams:register_team' tournament.id %}" class="btn btn-gradient">👥 Register a Team</a>
+            {% else %}
+                <a href="{% url 'participants:register_participant' tournament.id %}" class="btn btn-gradient">👤 Register a Participant</a>
             {% endif %}
+        {% else %}
+            <a href="{% url 'accounts:login' %}" class="btn btn-outline">Login to Register</a>
         {% endif %}
+        <a href="/" class="btn btn-ghost" style="background:#f1f5f9; color:#475569;">← Back</a>
     </div>
 
-    {% if tournament.is_team_based %}
-    <div class="card shadow-sm mb-4">
-        <div class="card-header"><h5 class="mb-0">Teams</h5></div>
-        <ul class="list-group list-group-flush">
-            {% for team in teams %}
-                <li class="list-group-item">{{ team.name }}</li>
-            {% empty %}
-                <li class="list-group-item text-muted">No teams yet</li>
-            {% endfor %}
-        </ul>
-    </div>
-    
-    {% else %}
-    <div class="card shadow-sm mb-4">
-        <div class="card-header"><h5 class="mb-0">Participants</h5></div>
-        <ul class="list-group list-group-flush">
-            {% for p in participants %}
-                <li class="list-group-item">{{ p.user.get_full_name|default:p.user.email }}</li>
-            {% empty %}
-                <li class="list-group-item text-muted">No participants yet</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem;">
+        <div class="card">
+            <div class="card-header">
+                {{ tournament.is_team_based|yesno:"👥 Teams,👤 Participants"}}
+            </div>
+            <ul class="list-group">
+                {%if tournament.is_team_based %}
+                    {%for team in teams %}
+                        <li class="list-group-item">{{ team.name }}</li>
+                    {% empty %}
+                        <li class="list-group-item" style="color:#94a3b8;">No teams yet</li>
+                    {% endfor %}
+                {% else %}
+                    {%for p in participants %}
+                        <li class="list-group-item">{{ p.user.get_full_name|default:p.user.email }}</li>
+                    {% empty %}
+                        <li class="list-group-item" style="color:#94a3b8;">No participants yet</li>
+                    {% endfor %}
+                {% endif %}
+            </ul>
+        </div>
 
-    <div class="card shadow-sm">
-        <div class="card-header"><h5 class="mb-0">Matches</h5></div>
-        <ul class="list-group list-group-flush">
-            {% for match in matches %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    {% if tournament.is_team_based %}
-                      {% if match.team1 and match.team2 %}
-                        {{ match.team1.name }} vs {{ match.team2.name }}
-                        {% if match.winner_team %}
-                          <span class="badge bg-success">Winner: {{ match.winner_team.name }}</span>
+        <div class="card">
+            <div class="card-header">⚔ Matches</div>
+            <ul class="list-group">
+                {% for match in matches %}
+                    <li class="list-group-item">
+                        <span>
+                            {% if tournament.is_team_based %}
+                                {% if match.team1 and match.team2 %}
+                                    {{ match.team1.name }} vs {{ match.team2.name }}
+                                {% endif %}
+                            {% else %}
+                                {% if match.participant1 and match.participant2 %}
+                                    {{ match.participant1.get_full_name|default:match.participant1.email }} vs
+                                    {{ match.participant2.get_full_name|default:match.participant2.email }}
+                                {% endif %}
+                            {%endif %}
+                        </span>
+                        {%if tournament.is_team_based %}
+                            {% if match.winner_team %}
+                                <span class="badge bg-success">🏆 {{ match.winner_team.name }}</span>
+                            {% else %}
+                                <span class="badge bg-gray">No result yet</span>
+                            {% endif %}
                         {% else %}
-                          <span class="badge bg-secondary">No result yet</span>
+                            {% if match.winner_participant %}
+                                <span class="badge bg-success">🏆 {{ match.winner_participant.get_full_name|default:match.winner_participant.email }}</span>
+                            {% else %}
+                                <span class="badge bg-gray">No result yet</span>
+                            {% endif %}
                         {% endif %}
-                      {% endif %}
-                    {% else %}
-                      {% if match.participant1 and match.participant2 %}
-                        {{ match.participant1.get_full_name|default:match.participant1.email }} vs
-                        {{ match.participant2.get_full_name|default:match.participant2.email }}
-                        {% if match.winner_participant %}
-                          <span class="badge bg-success">Winner: {{ match.winner_participant.get_full_name|default:match.winner_participant.email }}</span>
-                        {% else %}
-                          <span class="badge bg-secondary">No result yet</span>
-                        {% endif %}
-                      {% endif %}
-                    {% endif %}
-                </li>
-            {% empty %}
-               <li class="list-group-item text-muted">No matches scheduled yet</li>
-            {% endfor %}
-        </ul>
-    </div> 
-
+                    </li>
+                {% empty %}
+                    <li class="list-group-item" style="color:#94a3b8;">No matches scheduled </li>
+                {% endfor %}
+            </ul>    
+        </div>
+    </div>
 </div>
+
 {% endblock %}

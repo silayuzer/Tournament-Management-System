@@ -4,13 +4,13 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class RegistrationForm(forms.ModelForm):
-    password=forms.CharField(widget=forms.PasswordInput)
-    password_confirm=forms.CharField(widget=forms.PasswordInput)
+    password=forms.CharField(widget=forms.PasswordInput, label="Password")
+    password_confirm=forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
 
 
     class Meta:
         model=User
-        fields=['email', 'password']
+        fields=['first_name', 'last_name', 'email', 'password']
 
     def clean(self):
         cleaned_data=super().clean()

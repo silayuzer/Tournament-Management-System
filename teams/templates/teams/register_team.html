@@ -1,28 +1,32 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block title %}Register Team{% endblock %}
 {% block content %}
 
-<h1>Register Team for {{ tournament.name }}</h1>
-
-<form method="post">
-    {% csrf_token %}
-    {% if form.non_field_errors %}
-        <div class="message error">
-            {{ form.non_field_errors }}
+<div class="container" style="max-width: 520px;">
+    <div class="card">
+        <div class="card-header gradient">
+            <h2 style="font-size:1.4rem; font-weight:700;">👥Register a Team</h2>
+            <p style="opacity:0.8; font-size:0.875rem; margin-top:0.25rem;">{{ tournament.name }}</p>
         </div>
-    {% endif %}
-    {{ form.as_p }}
-
-
-    <div class="form-actions">
-        <button type="submit" class="btn admin">
-            Register Team
-        </button>
-
-        <a href="{% url 'tournaments:tournament_detail' tournament.id %}" class="btn secondary">
-            ← Back to Tournament
-        </a>
+        <div class="card-body">
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">⚠ {{ form.non_field_errors }}</div>
+            {% endif %}
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Team Name</label>
+                    <input type="text" name="name" class="form-control" placeholder="Enter team name" required>
+                </div>
+                <div style="display:flex; gap:0.75rem; margin-top:1rem;">
+                    <button type="submit" class="btn btn-gradient btn-lg" style="flex: 1;">Register Team</button>
+                    <a href="{% url 'tournaments:tournament_detail' tournament.id %}" 
+                      class="btn" style="background:#f1f5f9; color:#475569; padding:0.75rem 1.5rem;">Cancel</a>
+                </div>
+            </form>
+        </div>
     </div>
-</form>
+</div>
 
 {% endblock %}

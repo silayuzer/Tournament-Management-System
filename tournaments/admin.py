@@ -30,8 +30,7 @@ class MatchInline(admin.TabularInline):
         tournament_id = self._get_tournament_id(request)
 
         if tournament_id:
-            if db_field.name in ('team1', 'team2', 'winner_team'):
-                from team.models import Team
+            if db_field.name in ('team1', 'team2'):
                 kwargs['queryset'] = Team.objects.filter(tournament_id=tournament_id)
 
             if db_field.name in ('participant1', 'participant2', 'winner_participant'):
@@ -42,6 +41,33 @@ class MatchInline(admin.TabularInline):
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
     
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        return form
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+            tournament_id = self._get_tournament_id(request)
+
+            if db_field.name == 'winner_participant':
+                if tournament_id:
+                    from django.contrib.auth import get_user_model
+                    User = get_user_model()
+                    user_ids = Participant.objects.filter(tournament_id=tournament_id).values_list('user_id', flat=True)
+                    kwargs['queryset'] = User.objects.filter(id__in=user_ids)
+
+                if db_field.name in ('team1', 'team2', 'winner_team'):
+                    if tournament_id:
+                        kwargs['queryset'] = Team.objects.filter(tournament_id=tournament_id)
+
+                if db_field.name in ('participant1', 'participant2'):
+                    if tournament_id:
+                        from django.contrib.auth import get_user_model
+                        User = get_user_model()
+                        user_ids = Participant.objects.filter(tournament_id=tournament_id).values_list('user_id', flat=True)
+                        kwargs['queryset'] = User.objects.filter(id__in=user_ids)
+                
+            return super().formfield_for_foreignkey(db_field, request, **kwargs)
+     
     def _get_tournament_id(self, request):
         try:
             path_parts = request.path.split('/')
@@ -94,11 +120,30 @@ class MatchAdmin(admin.ModelAdmin):
                 if db_field.name in ('team1', 'team2', 'winner_team'):
                     kwargs['queryset'] = Team.objects.filter(tournament=tournament)
 
-                if db_field.name in ('participant1', 'participant2', 'winner_participant'):
+                if db_field.name in ('participant1', 'participant2'):
                     from django.contrib.auth import get_user_model
                     User = get_user_model()
                     user_ids = Participant.objects.filter(tournament=tournament).values_list('user_id', flat=True)
                     kwargs['queryset'] = User.objects.filter(id__in=user_ids)
+
+                if db_field.name == 'winner_participant':
+                    from django.contrib.auth import get_user_model
+                    User = get_user_model()
+                    allowed = []
+                    if match.participant1:
+                        allowed.append(match.participant1.pk)
+                    if match.participant2:
+                        allowed.append(match.participant2.pk)
+                    kwargs['queryset'] = User.objects.filter(pk__in=allowed)
+
+                if db_field.name == 'winner_team':
+                    allowed = []
+                    if match.team1:
+                        allowed.append(match.team1.pk)
+                    if match.team2:
+                        allowed.append(match.team2.pk)
+                    kwargs['queryset'] = Team.objects.filter(pk__in=allowed)
+
             except Match.DoesNotExist:
                 pass
             

@@ -1,26 +1,41 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block title %}Register{% endblock %}
 {% block content %}
 
-<h1>Register</h1>
-
-{% if form.errors %}
-  <div style="color: red;">
-    {{ form.errors }}
-  </div>
-{% endif %}
-
-<form method="post">
-    {% csrf_token %}
-
-    {% for field in form %}
-        <div>
-            {{ field.label_tag }}
-            {{ field }}
-            {{ field.errors }}
+<div class="form-card">
+   <div class="card">
+        <div class="card-header gradient">
+            <h2>Create an Account</h2>
+            <p>Join TournamentHub today!</p>
         </div>
-    {% endfor %}
+        <div class="card-body">
+          {% if form.errors %}
+            <div class="alert alert-danger">⚠ Please fix the errors below.</div>
+          {% endif %}      
+          <form method="post">
+             {% csrf_token %}
+              {% for field in form %}
+                  <div class="form-group">
+                      <label>{{ field.label }}</label>
+                      <input type="{{ field.field.widget.input_type }}" 
+                             name="{{ field.html_name }}" 
+                             class="form-control"
+                             placeholder="{{ field.label}}">
+                      {% if field.errors %}
+                          <div style="color:var(--danger); font-size:0.8rem; margin-top:0.3rem;">{{ field.errors }}</div>
+                      {% endif %}
+                  </div>
+              {% endfor %}
+              <button type="submit" class="btn btn-gradient btn-full btn-lg" style="margin-top:0.5rem;">Create Account →</button>
+            </form>
+            <div class="divider"></div>
+            <div style="text-align:center; font-size:0.875rem; color:#64748b;">
+                Already have an account? 
+                <a href="{% url 'accounts:login' %}" style="color: var(--primary);">Sign in</a>
+            </div>
+        </div>
+   </div>
+</div>
 
-    <button type="submit">Register</button>
-</form>
 {% endblock %}
